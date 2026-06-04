@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateIdeaDto } from './dto/create-idea.dto';
+import { OpenAI } from 'openai';
 
 @Injectable()
 export class IdeaService {
@@ -48,15 +49,59 @@ export class IdeaService {
   async validateIdea(id: string) {
     const idea = await this.getOne(id);
     
-    // Simulate AI generation or use LLM if configured
-    const swot = this.generateSWOT(idea.title, idea.description);
-    const leanCanvas = this.generateLeanCanvas(idea.title, idea.description);
-    const competitors = this.generateCompetitors(idea.title, idea.description);
-    const riskAnalysis = this.generateRisks(idea.title, idea.description);
-    
-    // Calculate a dynamic validation score based on description length, keyword match, and complexity
-    const scoreBase = 60 + Math.min(idea.description.length / 20, 25);
-    const validationScore = Math.min(Math.round(scoreBase + (idea.title.toLowerCase().includes('ai') ? 10 : 5)), 98);
+    let swot: any;
+    let leanCanvas: any;
+    let competitors: any;
+    let riskAnalysis: any;
+    let validationScore = 75;
+
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (apiKey) {
+      try {
+        const openai = new OpenAI({ apiKey });
+        const prompt = `You are a world-class startup founder and VC validator. 
+Analyze this startup idea:
+Title: "${idea.title}"
+Description: "${idea.description}"
+
+Provide a structured validation analysis in JSON format containing:
+1. "swot": object with string arrays "strengths", "weaknesses", "opportunities", "threats" (3 items each).
+2. "leanCanvas": object containing "problem" (string array), "solution" (string array), "keyMetrics" (string array), "uvp" (string), "unfairAdvantage" (string), "channels" (string array), "customerSegments" (string array), "costStructure" (string array), "revenueStreams" (string array).
+3. "competitors": array of objects with keys "name", "advantage", "risk" (Low/Medium/High).
+4. "risks": object with keys "marketRisk", "executionRisk", "financialRisk" (strings describing each).
+5. "score": number between 10 and 99 indicating the AI validation viability score.
+
+Do not output markdown codeblocks, output raw valid JSON only.`;
+
+        const completion = await openai.chat.completions.create({
+          model: 'gpt-4o-mini',
+          messages: [{ role: 'user', content: prompt }],
+          response_format: { type: 'json_object' },
+        });
+
+        const resultJson = JSON.parse(completion.choices[0].message?.content || '{}');
+        swot = resultJson.swot || this.generateSWOT(idea.title, idea.description);
+        leanCanvas = resultJson.leanCanvas || this.generateLeanCanvas(idea.title, idea.description);
+        competitors = resultJson.competitors || this.generateCompetitors(idea.title, idea.description);
+        riskAnalysis = resultJson.risks || this.generateRisks(idea.title, idea.description);
+        validationScore = resultJson.score || 75;
+      } catch (err) {
+        console.error('Failed to validate idea using OpenAI, falling back to local generator', err);
+        swot = this.generateSWOT(idea.title, idea.description);
+        leanCanvas = this.generateLeanCanvas(idea.title, idea.description);
+        competitors = this.generateCompetitors(idea.title, idea.description);
+        riskAnalysis = this.generateRisks(idea.title, idea.description);
+        const scoreBase = 60 + Math.min(idea.description.length / 20, 25);
+        validationScore = Math.min(Math.round(scoreBase + (idea.title.toLowerCase().includes('ai') ? 10 : 5)), 98);
+      }
+    } else {
+      swot = this.generateSWOT(idea.title, idea.description);
+      leanCanvas = this.generateLeanCanvas(idea.title, idea.description);
+      competitors = this.generateCompetitors(idea.title, idea.description);
+      riskAnalysis = this.generateRisks(idea.title, idea.description);
+      const scoreBase = 60 + Math.min(idea.description.length / 20, 25);
+      validationScore = Math.min(Math.round(scoreBase + (idea.title.toLowerCase().includes('ai') ? 10 : 5)), 98);
+    }
 
     const updatedIdea = await this.prisma.idea.update({
       where: { id },
