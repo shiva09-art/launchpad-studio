@@ -1,27 +1,31 @@
 import type { Metadata } from "next";
-import { Outfit, JetBrains_Mono } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import "./globals.css";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "Launch Pad | Anti-Gravity Operating System for Startups",
-  description: "Accelerate your startup from Idea to Validation, Funding, and Growth with Launch Pad. The complete, AI-driven workspace for founders.",
-  keywords: ["startup accelerator", "startup OS", "business model canvas", "pitch deck builder", "founder tool", "investor CRM", "AI startup validator"],
+  title: "Launch Pad | Expert-Driven Startup Idea Review",
+  description:
+    "Get your startup idea reviewed in a structured process by domain experts from legal, finance, marketing, and engineering.",
+  keywords: [
+    "startup idea assessment",
+    "expert review",
+    "technical feasibility",
+    "financial modeling",
+    "legal compliance startup",
+    "pitch preparation",
+  ],
   openGraph: {
-    title: "Launch Pad | Anti-Gravity OS for Entrepreneurship",
-    description: "Remove obstacles between your idea and a successful company.",
+    title: "Launch Pad | Expert-Driven Startup Idea Review",
+    description:
+      "We simulate a real startup review meeting. Your idea is analyzed by professionals from legal, finance, marketing, and tech.",
     type: "website",
+    url: "https://shiva09-art.github.io/launch-pad/",
   },
 };
 
@@ -31,15 +35,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${outfit.variable} ${jetbrainsMono.variable} h-full antialiased dark`}
-    >
-      <body className="min-h-full flex flex-col bg-[#06060c] text-[#f4f4f7] selection:bg-violet-accent/30 selection:text-white">
-        <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-violet-accent/15 via-transparent to-transparent pointer-events-none -z-10" />
-        <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_var(--tw-gradient-stops))] from-cyan-accent/5 via-transparent to-transparent pointer-events-none -z-10" />
-        {children}
-      </body>
+    <html lang="en" className={dmSans.variable}>
+      <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap"
+          rel="stylesheet"
+        />
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        />
+      </head>
+      <body>{children}</body>
     </html>
   );
 }
