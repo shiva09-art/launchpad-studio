@@ -1,0 +1,285 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  FOUNDER
+  EXPERT
+  SERVICE_PROVIDER
+  INVESTOR
+  ADMIN
+}
+
+enum MilestoneStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  DELAYED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum OrderStatus {
+  PROPOSED
+  ESCROWED
+  IN_PROGRESS
+  SUBMITTED
+  COMPLETED
+  DISPUTED
+}
+
+model User {
+  id              String         @id @default(uuid())
+  email           String         @unique
+  role            UserRole
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Relations
+  profile         UserProfile?
+  memberships     StartupMember[]
+  bookings        Booking[]      @relation("UserBookings")
+  expertBookings  Booking[]      @relation("ExpertBookings")
+  messagesSent    Message[]      @relation("SentMessages")
+  messagesRecv    Message[]      @relation("ReceivedMessages")
+  proposals       Proposal[]
+  ordersAsClient  ServiceOrder[] @relation("ClientOrders")
+  ordersAsVendor  ServiceOrder[] @relation("VendorOrders")
+}
+
+model UserProfile {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  firstName        String
+  lastName         String
+  avatarUrl        String?
+  bio              String?
+  skills           String[]
+  hourlyRate       Float?
+  rating           Float    @default(5.0)
+  totalReviews     Int      @default(0)
+  timezone         String   @default("UTC")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Startup {
+  id               String           @id @default(uuid())
+  name             String
+  tagline          String?
+  description      String?
+  industry         String
+  stage            String           @default("Idea")
+  logoUrl          String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  
+  // Relations
+  members          StartupMember[]
+  ideas            Idea[]
+  roadmaps         Roadmap[]
+  pitchDecks       PitchDeck[]
+  analytics        StartupAnalytics?
+  dna              FounderDNA?
+  predictions      SuccessPrediction[]
+  simulations      SimulationRun[]
+}
+
+model StartupMember {
+  id        String   @id @default(uuid())
+  startupId String
+  startup   Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("Member")
+  joinedAt  DateTime @default(now())
+
+  @@unique([startupId, userId])
+}
+
+model Idea {
+  id             String    @id @default(uuid())
+  startupId      String
+  startup        Startup   @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  title          String
+  description    String
+  validationScore Float?
+  marketResearch Json?
+  competitors    Json?
+  swot           Json?
+  leanCanvas     Json?
+  riskAnalysis   Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Roadmap {
+  id          String      @id @default(uuid())
+  startupId   String
+  startup     Startup     @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  milestones  Milestone[]
+}
+
+model Milestone {
+  id          String          @id @default(uuid())
+  roadmapId   String
+  roadmap     Roadmap         @relation(fields: [roadmapId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  dueDate     DateTime
+  status      MilestoneStatus @default(NOT_STARTED)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  tasks       Task[]
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  milestoneId String
+  milestone   Milestone  @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  assignedTo  String?
+  dueDate     DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model Booking {
+  id          String        @id @default(uuid())
+  clientId    String
+  client      User          @relation("UserBookings", fields: [clientId], references: [id])
+  expertId    String
+  expert      User          @relation("ExpertBookings", fields: [expertId], references: [id])
+  startTime   DateTime
+  endTime     DateTime
+  status      BookingStatus @default(PENDING)
+  notes       String?
+  jitsiRoomId String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model Proposal {
+  id          String   @id @default(uuid())
+  serviceId   String
+  providerId  String
+  provider    User     @relation(fields: [providerId], references: [id])
+  title       String
+  description String
+  price       Float
+  deliveryDays Int
+  createdAt   DateTime @default(now())
+}
+
+model ServiceOrder {
+  id         String      @id @default(uuid())
+  clientId   String
+  client     User        @relation("ClientOrders", fields: [clientId], references: [id])
+  vendorId   String
+  vendor     User        @relation("VendorOrders", fields: [vendorId], references: [id])
+  title      String
+  price      Float
+  status     OrderStatus @default(PROPOSED)
+  escrowPaid Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  content    String
+  createdAt  DateTime @default(now())
+}
+
+model PitchDeck {
+  id             String   @id @default(uuid())
+  startupId      String
+  startup        Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  problem        String
+  solution       String
+  marketSize     String
+  competition    String
+  businessModel  String
+  traction       String
+  team           String
+  financials     String
+  ask            String
+  pdfStorageUrl  String?
+  shareToken     String?  @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model StartupAnalytics {
+  id                String   @id @default(uuid())
+  startupId         String   @unique
+  startup           Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  startupScore      Float    @default(0)
+  validationScore   Float    @default(0)
+  investorReadiness Float    @default(0)
+  marketFitScore    Float    @default(0)
+  burnRate          Float    @default(0)
+  revenueForecast   Json?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model FounderDNA {
+  id                 String   @id @default(uuid())
+  startupId          String   @unique
+  startup            Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  executionAbility   Float    @default(0.0)
+  technicalCapability Float    @default(0.0)
+  businessCapability  Float    @default(0.0)
+  fundingReadiness   Float    @default(0.0)
+  updatedAt          DateTime @updatedAt
+}
+
+model SuccessPrediction {
+  id                 String   @id @default(uuid())
+  startupId          String
+  startup            Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  successProbability Float
+  failureRisks       String[]
+  missingRoles       String[]
+  fundingLikelihood  String
+  createdAt          DateTime @default(now())
+}
+
+model SimulationRun {
+  id          String   @id @default(uuid())
+  startupId   String
+  startup     Startup  @relation(fields: [startupId], references: [id], onDelete: Cascade)
+  type        String
+  parameters  Json
+  results     Json
+  createdAt   DateTime @default(now())
+}

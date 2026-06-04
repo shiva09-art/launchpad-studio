@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+
+# Production / Builds
+.next/
+dist/
+build/
+out/
+.vercel
+
+# Databases / local assets
+*.db
+*.sqlite
+postgres_data/
+redis_data/
+minio_data/
+
+# Environment configs
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+
+# OS
+.DS_Store
+Thumbs.db
