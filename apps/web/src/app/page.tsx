@@ -320,7 +320,7 @@ export default function Home() {
                   ) : showSuccess ? (
                     <><i className="fa-solid fa-check" style={{ marginRight: "8px" }}></i> Application Submitted!</>
                   ) : (
-                    "Create Account & Apply"
+                    "Apply"
                   )}
                 </button>
 
