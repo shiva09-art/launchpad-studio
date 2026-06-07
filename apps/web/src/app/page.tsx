@@ -117,8 +117,7 @@ export default function Home() {
       <header id="siteHeader" className={navScrolled ? "scrolled" : ""}>
         <div className="container navbar">
           <a href="#home" className="logo" aria-label="Launch Pad home">
-            <span className="logo-mark"><i className="fa-solid fa-rocket"></i></span>
-            Launch Pad
+            <img src="/logo.jpg" alt="Launchpad Logo" style={{ height: "40px", borderRadius: "8px" }} />
           </a>
 
           <ul className={`nav-links ${menuOpen ? "active" : ""}`} id="navLinks" role="navigation" aria-label="Main navigation">
@@ -126,7 +125,8 @@ export default function Home() {
             <li><a href="#services" onClick={closeMenu}>Services</a></li>
             <li><a href="#how" onClick={closeMenu}>Process</a></li>
             <li><a href="#about" onClick={closeMenu}>About</a></li>
-            <li><a href="#contact" className="btn btn-primary" style={{ padding: "10px 20px", fontSize: "0.88rem" }} onClick={closeMenu}>Start</a></li>
+            <li><a href="/login" onClick={closeMenu} style={{ fontWeight: 600 }}>Sign In</a></li>
+            <li><a href="/register" className="btn btn-primary" style={{ padding: "10px 20px", fontSize: "0.88rem" }} onClick={closeMenu}>Sign Up</a></li>
           </ul>
 
           <button className="menu-btn" id="menuBtn" aria-label="Toggle menu" aria-expanded={menuOpen} onClick={toggleMenu}>
@@ -444,8 +444,7 @@ export default function Home() {
           <div className="footer-top">
             <div className="footer-brand">
               <div className="logo" style={{ marginBottom: "12px" }}>
-                <span className="logo-mark"><i className="fa-solid fa-rocket"></i></span>
-                Launch Pad
+                <img src="/logo.jpg" alt="Launchpad Logo" style={{ height: "40px", borderRadius: "8px" }} />
               </div>
               <p>Helping students and first-time founders move from raw idea to clearer startup direction.</p>
             </div>
