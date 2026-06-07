@@ -161,7 +161,7 @@ export default function LoginPage() {
             <form onSubmit={handleVerifyOtp} style={{ animation: "fadeInUp 0.4s var(--ease) forwards" }}>
               <div className="form-group">
                 <label style={{ color: "var(--ink-60)", textAlign: "center", display: "block" }}>
-                  Enter the 6-digit code sent to <br /><strong>{email}</strong>
+                  Enter the 8-digit code sent to <br /><strong>{email}</strong>
                 </label>
                 <input 
                   type="text" 
@@ -169,7 +169,7 @@ export default function LoginPage() {
                   value={otp} 
                   onChange={e => setOtp(e.target.value)} 
                   required 
-                  placeholder="123456"
+                  placeholder="12345678"
                   style={{ letterSpacing: "8px", fontSize: "1.5rem", textAlign: "center", marginTop: "12px" }}
                 />
               </div>
