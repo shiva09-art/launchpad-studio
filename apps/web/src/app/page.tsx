@@ -28,8 +28,8 @@ export default function Home() {
     const form = formRef.current;
     if (!form) return;
 
-    const fname = form.elements.namedItem("first_name") as HTMLInputElement;
-    const lname = form.elements.namedItem("last_name") as HTMLInputElement;
+    const fullName = form.elements.namedItem("full_name") as HTMLInputElement;
+    const ageGroup = form.elements.namedItem("age_group") as HTMLSelectElement;
     const email = form.elements.namedItem("email") as HTMLInputElement;
     const idea = form.elements.namedItem("idea_description") as HTMLTextAreaElement;
 
@@ -44,8 +44,8 @@ export default function Home() {
       valid = false;
     };
 
-    if (!fname.value.trim()) showErr(fname);
-    if (!lname.value.trim()) showErr(lname);
+    if (!fullName.value.trim()) showErr(fullName);
+    if (!ageGroup.value) showErr(ageGroup);
     
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailPattern.test(email.value.trim())) showErr(email);
