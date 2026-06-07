@@ -230,7 +230,7 @@ export default function Home() {
                 <small className="error-msg">Please describe your idea and stage.</small>
               </div>
               
-              <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: "16px", marginTop: "8px", backgroundColor: showSuccess ? "#00c26b" : "var(--primary)", fontWeight: 600, letterSpacing: "0.5px" }} disabled={isSubmitting}>
+              <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: "16px", marginTop: "8px", backgroundColor: showSuccess ? "#00c26b" : "var(--accent)", color: "#ffffff", fontWeight: 600, letterSpacing: "0.5px", border: "none" }} disabled={isSubmitting}>
                 {isSubmitting ? (
                   <><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: "8px" }}></i> Applying...</>
                 ) : showSuccess ? (
