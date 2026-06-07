@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef } from "react";
 
 export default function Home() {
   const [navScrolled, setNavScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   
@@ -12,40 +11,15 @@ export default function Home() {
 
   useEffect(() => {
     const handleScroll = () => {
-      setNavScrolled(window.scrollY > 20);
+      setNavScrolled(window.scrollY > 10);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
 
-    // Reveal observer
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("visible");
-          observer.unobserve(entry.target);
-        }
-      });
-    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
-
-    document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
-
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      observer.disconnect();
     };
   }, []);
-
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
-  };
-
-  const closeMenu = () => {
-    setMenuOpen(false);
-  };
-
-  const scrollToForm = () => {
-    document.getElementById("contactForm")?.scrollIntoView({ behavior: "smooth" });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,9 +30,8 @@ export default function Home() {
 
     const fname = form.elements.namedItem("first_name") as HTMLInputElement;
     const lname = form.elements.namedItem("last_name") as HTMLInputElement;
-    const contactDetail = form.elements.namedItem("email_or_whatsapp") as HTMLInputElement;
+    const email = form.elements.namedItem("email") as HTMLInputElement;
     const idea = form.elements.namedItem("idea_description") as HTMLTextAreaElement;
-    const help = form.elements.namedItem("challenge") as HTMLInputElement;
 
     form.querySelectorAll(".error-msg").forEach(el => {
       (el as HTMLElement).style.display = "none";
@@ -74,15 +47,10 @@ export default function Home() {
     if (!fname.value.trim()) showErr(fname);
     if (!lname.value.trim()) showErr(lname);
     
-    const contactVal = contactDetail.value.trim();
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phonePattern = /^[+\d\s\-]{7,20}$/;
-    if (!emailPattern.test(contactVal) && !phonePattern.test(contactVal.replace(/\s/g, ""))) {
-      showErr(contactDetail);
-    }
+    if (!emailPattern.test(email.value.trim())) showErr(email);
     
-    if (idea.value.trim().length < 15) showErr(idea);
-    if (!help.value.trim()) showErr(help);
+    if (idea.value.trim().length < 5) showErr(idea);
 
     if (!valid) return;
 
@@ -90,7 +58,7 @@ export default function Home() {
 
     try {
       const data = new FormData(form);
-      const res = await fetch(form.action, {
+      const res = await fetch("https://formspree.io/f/mgorgjpg", {
         method: "POST",
         body: data,
         headers: { Accept: "application/json" }
@@ -101,12 +69,12 @@ export default function Home() {
         setShowSuccess(true);
         setTimeout(() => {
           setShowSuccess(false);
-        }, 4000);
+        }, 5000);
       } else {
         throw new Error("Formspree error");
       }
     } catch (error) {
-      alert("Transmission failure. Please re-submit your idea form details.");
+      alert("Transmission failure. Please re-submit your details.");
     } finally {
       setIsSubmitting(false);
     }
@@ -114,324 +82,162 @@ export default function Home() {
 
   return (
     <>
-      <header id="siteHeader" className={navScrolled ? "scrolled" : ""}>
-        <div className="container navbar">
-          <a href="#home" className="logo" aria-label="Launch Pad home">
+      <header id="header" className={navScrolled ? "scrolled" : ""}>
+        <div className="container nav-container">
+          <a href="#" className="logo">
             <img src="/logo.jpg" alt="Launchpad Logo" style={{ height: "40px", borderRadius: "8px" }} />
+            Launch Pad
           </a>
-
-          <ul className={`nav-links ${menuOpen ? "active" : ""}`} id="navLinks" role="navigation" aria-label="Main navigation">
-            <li><a href="#problems" onClick={closeMenu}>Problems</a></li>
-            <li><a href="#services" onClick={closeMenu}>Services</a></li>
-            <li><a href="#how" onClick={closeMenu}>Process</a></li>
-            <li><a href="#about" onClick={closeMenu}>About</a></li>
-            <li><a href="/login" onClick={closeMenu} style={{ fontWeight: 600 }}>Sign In</a></li>
-            <li><a href="/register" className="btn btn-primary" style={{ padding: "10px 20px", fontSize: "0.88rem" }} onClick={closeMenu}>Sign Up</a></li>
-          </ul>
-
-          <button className="menu-btn" id="menuBtn" aria-label="Toggle menu" aria-expanded={menuOpen} onClick={toggleMenu}>
-            <i className={`fa-solid ${menuOpen ? "fa-xmark" : "fa-bars"}`} id="menuIcon"></i>
-          </button>
+          <nav className="nav-links">
+            <a href="#ecosystem">Ecosystem</a>
+            <a href="#roadmap">Roadmap</a>
+            <a href="#marketplace">Marketplace</a>
+          </nav>
+          <div className="nav-auth">
+            <a href="/login" className="btn btn-outline" style={{ padding: "8px 16px" }}>Sign In</a>
+            <a href="#apply" className="btn btn-primary" style={{ padding: "8px 16px" }}>Get Started</a>
+          </div>
         </div>
       </header>
 
-      <section className="hero" id="home">
-        <div className="hero-inner container">
-          <div className="hero-eyebrow reveal">
-            <i className="fa-solid fa-seedling"></i>
-            For Students & First-Time Founders
-          </div>
-
-          <h1 className="reveal reveal-delay-1">
-            Turn your idea into<br /><em>a clear startup plan.</em>
-          </h1>
-
-          <p className="hero-sub reveal reveal-delay-2">
-            Launch Pad helps early founders validate ideas, understand next steps, and prepare for pitch conversations without fake promises or confusing startup jargon.
-          </p>
-
-          <div className="hero-actions reveal reveal-delay-3">
-            <a href="#contact" className="btn btn-primary">
-              Submit My Idea
-              <i className="fa-solid fa-arrow-right" style={{ marginLeft: "6px" }}></i>
-            </a>
-            <a href="#how" className="btn btn-ghost">See the Process</a>
-          </div>
-
-          <div className="hero-social-proof reveal reveal-delay-4">
-            <div className="proof-item">
-              <span className="proof-number">🎓 Student-Focused</span>
-              <span className="proof-label">Built for first-time founders</span>
-            </div>
-            <div className="proof-divider" aria-hidden="true"></div>
-            <div className="proof-item">
-              <span className="proof-number">⚡ 3–5 Day Feedback</span>
-              <span className="proof-label">Initial review turnaround</span>
-            </div>
-            <div className="proof-divider" aria-hidden="true"></div>
-            <div className="proof-item">
-              <span className="proof-number">🌍 Open to All</span>
-              <span className="proof-label">Global early access</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="section problem-section" id="problems">
+      <section className="hero">
         <div className="container">
-          <div className="section-heading">
-            <span className="section-label">The Problem</span>
-            <h2>Many ideas fail early because they start without clarity.</h2>
-            <p className="subtext">Not always because the idea is bad, but because beginners often start without validation, roadmap, or clear execution steps.</p>
-          </div>
-
-          <div className="problems-grid">
-            <div className="problem-card reveal">
-              <div className="problem-icon"><i className="fa-solid fa-magnifying-glass-chart"></i></div>
-              <h3>No real validation</h3>
-              <p>Many founders build before checking whether the problem is real and whether people actually care.</p>
-            </div>
-            <div className="problem-card reveal reveal-delay-1">
-              <div className="problem-icon"><i className="fa-solid fa-map"></i></div>
-              <h3>No clear roadmap</h3>
-              <p>A big idea without a step-by-step plan becomes confusing very quickly.</p>
-            </div>
-            <div className="problem-card reveal reveal-delay-2">
-              <div className="problem-icon"><i className="fa-solid fa-file-signature"></i></div>
-              <h3>Documentation confusion</h3>
-              <p>Basic documents, registrations, and pitch material can feel complicated for first-time founders.</p>
-            </div>
-            <div className="problem-card reveal reveal-delay-3">
-              <div className="problem-icon"><i className="fa-solid fa-comments"></i></div>
-              <h3>Weak pitch clarity</h3>
-              <p>Many founders cannot explain the problem, solution, users, and business model clearly.</p>
-            </div>
-            <div className="problem-card reveal reveal-delay-4">
-              <div className="problem-icon"><i className="fa-solid fa-signs-post"></i></div>
-              <h3>Stuck on next steps</h3>
-              <p>The biggest question is often simple: what should I do next?</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="section" id="services">
-        <div className="container">
-          <div className="section-heading reveal">
-            <span className="section-label">What We Do</span>
-            <h2>Four simple ways we help early founders move forward.</h2>
-            <p className="subtext">The goal is not to promise funding. The goal is to give you clarity, structure, and a better first direction.</p>
-          </div>
-          <div className="services-grid">
-            <div className="service-card reveal">
-              <span className="service-number" aria-hidden="true">01</span>
-              <div className="service-icon"><i className="fa-solid fa-circle-check"></i></div>
-              <h3>Idea Validation</h3>
-              <p>We help you check whether your idea solves a real problem, who the users are, and what assumptions need testing first.</p>
-              <div className="service-tags">
-                <span className="tag">Problem Check</span>
-                <span className="tag">User Clarity</span>
-                <span className="tag">Assumption Testing</span>
-              </div>
-            </div>
-            <div className="service-card reveal reveal-delay-1">
-              <span className="service-number" aria-hidden="true">02</span>
-              <div className="service-icon"><i className="fa-solid fa-compass"></i></div>
-              <h3>Startup Roadmap</h3>
-              <p>We convert your raw idea into practical next steps: what to research, what to build first, and how to avoid unnecessary work.</p>
-              <div className="service-tags">
-                <span className="tag">MVP Direction</span>
-                <span className="tag">90-Day Plan</span>
-                <span className="tag">Execution Steps</span>
-              </div>
-            </div>
-            <div className="service-card reveal reveal-delay-2">
-              <span className="service-number" aria-hidden="true">03</span>
-              <div className="service-icon"><i className="fa-solid fa-folder-open"></i></div>
-              <h3>Documentation Support</h3>
-              <p>We guide you with basic startup documents like idea notes, one-page plans, pitch outlines, and registration direction when needed.</p>
-              <div className="service-tags">
-                <span className="tag">One-Page Plan</span>
-                <span className="tag">Pitch Outline</span>
-                <span className="tag">Basic Docs</span>
-              </div>
-            </div>
-            <div className="service-card reveal reveal-delay-3">
-              <span className="service-number" aria-hidden="true">04</span>
-              <div className="service-icon"><i className="fa-solid fa-chart-line"></i></div>
-              <h3>Pitch Preparation</h3>
-              <p>We help you prepare for early pitch conversations by making your problem, solution, target users, and next milestones clearer.</p>
-              <div className="service-tags">
-                <span className="tag">Pitch Clarity</span>
-                <span className="tag">Founder Story</span>
-                <span className="tag">Milestones</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="section how-bg" id="how">
-        <div className="container">
-          <div className="section-heading reveal">
-            <span className="section-label">The Process</span>
-            <h2>From raw idea to clearer startup direction in 3 steps.</h2>
-            <p className="subtext">Simple, honest, and beginner-friendly.</p>
-          </div>
-          <div className="steps-track">
-            <div className="step reveal">
-              <div className="step-circle">1</div>
-              <h3>Submit your idea</h3>
-              <p>Share what you are trying to build, who it is for, and where you are stuck.</p>
-              <div className="step-outcome"><i className="fa-solid fa-check"></i> Takes 5 minutes</div>
-            </div>
-            <div className="step reveal reveal-delay-2">
-              <div className="step-circle">2</div>
-              <h3>Get structured feedback</h3>
-              <p>We review the idea and give practical feedback on problem clarity, users, MVP direction, and next steps.</p>
-              <div className="step-outcome"><i className="fa-solid fa-check"></i> 3–5 days</div>
-            </div>
-            <div className="step reveal reveal-delay-4">
-              <div className="step-circle">3</div>
-              <h3>Move forward with clarity</h3>
-              <p>You get a cleaner direction before spending serious time, money, or effort.</p>
-              <div className="step-outcome"><i className="fa-solid fa-check"></i> Beginner friendly</div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="section about-section" id="about">
-        <div className="container">
-          <div className="section-heading reveal" style={{ textAlign: "left", maxWidth: "100%", marginBottom: "var(--sp-md)" }}>
-            <span className="section-label">About Launch Pad</span>
-            <h2>Built by a student founder solving early-stage confusion.</h2>
-            <p className="subtext">Launch Pad is currently in its early stage and is collecting feedback from students, freshers, and first-time founders.</p>
-          </div>
-          <div className="about-grid">
-            <div className="about-card reveal">
-              <h3>Early-stage and honest.</h3>
-              <p>Launch Pad is not claiming to be a big accelerator or a guaranteed funding platform. It is a practical support system for beginners who want to understand whether their idea has potential and what to do next.</p>
-            </div>
-            <div className="value-list reveal reveal-delay-2">
-              <div className="value-row">
-                <div className="value-icon"><i className="fa-solid fa-bullseye"></i></div>
-                <div className="value-content">
-                  <h4>Clarity over hype</h4>
-                  <p>We focus on clear thinking, realistic planning, and practical next steps.</p>
-                </div>
-              </div>
-              <div className="value-row">
-                <div className="value-icon"><i className="fa-solid fa-shield-halved"></i></div>
-                <div className="value-content">
-                  <h4>Honest feedback</h4>
-                  <p>If an idea needs improvement or a pivot, the feedback will be direct and useful.</p>
-                </div>
-              </div>
-              <div className="value-row">
-                <div className="value-icon"><i className="fa-solid fa-list-check"></i></div>
-                <div className="value-content">
-                  <h4>Actionable roadmap</h4>
-                  <p>Instead of only giving motivation, we help break the idea into steps.</p>
-                </div>
-              </div>
-              <div className="value-row">
-                <div className="value-icon"><i className="fa-solid fa-user-graduate"></i></div>
-                <div className="value-content">
-                  <h4>Beginner-first approach</h4>
-                  <p>Designed for students, freshers, and first-time founders who are starting from zero.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="section" id="contact">
-        <div className="container contact-grid">
-          <div className="contact-left reveal">
-            <span className="section-label">Start Today</span>
-            <h2>Have an idea? Get early feedback.</h2>
-            <p>Tell us about your idea and where you are stuck. We will review it and respond with practical guidance.</p>
-            <div className="checklist">
-              <div className="check-item"><span className="check-dot"><i className="fa-solid fa-check"></i></span>Idea validation feedback</div>
-              <div className="check-item"><span className="check-dot"><i className="fa-solid fa-check"></i></span>Beginner-friendly startup roadmap</div>
-              <div className="check-item"><span className="check-dot"><i className="fa-solid fa-check"></i></span>Pitch conversation preparation</div>
-              <div className="check-item"><span className="check-dot"><i className="fa-solid fa-check"></i></span>Early access founder list</div>
-            </div>
-            <div className="calendar-placeholder" id="scrollToFormBtn" onClick={scrollToForm}>
-              <div className="calendar-icon"><i className="fa-solid fa-envelope-open-text"></i></div>
-              <h3>Join the early founder list</h3>
-              <p>Want updates, templates, and early access? Submit your email through the form.</p>
-              <a href="#contactForm" className="btn btn-dark"><i className="fa-solid fa-arrow-down" style={{ marginRight: "6px" }}></i> Go to Form</a>
-            </div>
-          </div>
+          <div className="label">Execution-as-a-Service</div>
+          <h1>The operating system <br /><em>for first-time founders.</em></h1>
+          <p>Launch Pad is the complete ecosystem to validate ideas, connect with expert mentors, build your MVP, and prepare for fundraising—all through a single platform.</p>
           
-          <div className="form-card reveal reveal-delay-2">
-            <h3>Submit your idea</h3>
-            <form id="contactForm" ref={formRef} action="https://formspree.io/f/mgorgjpg" method="POST" onSubmit={handleSubmit} noValidate>
-              <div className="form-row">
+          <div className="hero-actions">
+            <a href="#apply" className="btn btn-primary"><i className="fa-solid fa-bolt" style={{ marginRight: '6px' }}></i> Start Building</a>
+            <a href="http://localhost:5000/auth/github" className="btn btn-github"><i className="fa-brands fa-github" style={{ marginRight: '6px' }}></i> Continue with GitHub</a>
+          </div>
+        </div>
+      </section>
+
+      <section className="section" id="ecosystem">
+        <div className="container">
+          <div className="label">The Ecosystem</div>
+          <h2>Everything you need, <br />zero friction.</h2>
+          <p className="subtext">We replaced fragmented tools and expensive consultants with a unified infrastructure designed specifically for day-zero startups.</p>
+
+          <div className="ecosystem-grid">
+            <div className="eco-card">
+              <div className="eco-icon"><i className="fa-solid fa-microscope"></i></div>
+              <h3>Idea Validation</h3>
+              <p>Data-driven market checks to ensure your solution actually solves a burning problem before you write a single line of code.</p>
+            </div>
+            <div className="eco-card">
+              <div className="eco-icon"><i className="fa-solid fa-route"></i></div>
+              <h3>Startup Roadmaps</h3>
+              <p>Step-by-step, actionable blueprints tailored to your industry, guiding you from concept to your first 100 users.</p>
+            </div>
+            <div className="eco-card">
+              <div className="eco-icon"><i className="fa-solid fa-code"></i></div>
+              <h3>MVP Development</h3>
+              <p>Technical guidance, architecture planning, and no-code/low-code resources to get your product live in weeks, not months.</p>
+            </div>
+            <div className="eco-card">
+              <div className="eco-icon"><i className="fa-solid fa-users-gear"></i></div>
+              <h3>Expert Mentorship</h3>
+              <p>Direct access to vetted operators, developers, and designers who have built and scaled real companies.</p>
+            </div>
+            <div className="eco-card">
+              <div className="eco-icon"><i className="fa-solid fa-file-contract"></i></div>
+              <h3>Registration & Docs</h3>
+              <p>Seamless incorporation guidance, founder agreements, and essential legal templates to protect your equity.</p>
+            </div>
+            <div className="eco-card">
+              <div className="eco-icon"><i className="fa-solid fa-chart-pie"></i></div>
+              <h3>Investor Readiness</h3>
+              <p>Pitch deck teardowns, cap table structuring, and data room preparation so you are fully prepared for seed rounds.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section dark-section" id="roadmap">
+        <div className="container">
+          <div className="label">The Founder Journey</div>
+          <h2>A systematic approach to execution.</h2>
+          <p className="subtext">Stop guessing what to do next. Our framework removes the ambiguity of early-stage company building.</p>
+
+          <div className="flow-steps">
+            <div className="step-card">
+              <div className="step-num">01</div>
+              <h3>Validate</h3>
+              <p>Identify your ideal customer profile, run demand tests, and secure your first letters of intent.</p>
+            </div>
+            <div className="step-card">
+              <div className="step-num">02</div>
+              <h3>Build</h3>
+              <p>Access our service marketplace and technical blueprints to build a robust, scalable MVP.</p>
+            </div>
+            <div className="step-card">
+              <div className="step-num">03</div>
+              <h3>Launch</h3>
+              <p>Execute go-to-market strategies with our growth templates and community support network.</p>
+            </div>
+            <div className="step-card">
+              <div className="step-num">04</div>
+              <h3>Fund</h3>
+              <p>Generate institutional-grade pitch materials and get matched with relevant early-stage investors.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="section" id="apply">
+        <div className="container onboard-container">
+          <div>
+            <div className="label">Early Access</div>
+            <h2>Join the next cohort of builders.</h2>
+            <p className="subtext" style={{ marginBottom: "32px" }}>We are onboarding a limited number of technical and non-technical founders this month. Create your account to access the ecosystem.</p>
+            
+            <div style={{ display: "flex", gap: "16px", marginBottom: "24px", flexWrap: "wrap" }}>
+              <a href="http://localhost:5000/auth/google" className="btn btn-google" style={{ flex: 1, minWidth: "140px" }}><i className="fa-brands fa-google" style={{ marginRight: '6px' }}></i> Google</a>
+              <a href="http://localhost:5000/auth/github" className="btn btn-github" style={{ flex: 1, minWidth: "140px" }}><i className="fa-brands fa-github" style={{ marginRight: '6px' }}></i> GitHub</a>
+            </div>
+            <p style={{ fontSize: "0.8rem", color: "var(--ink-40)", textAlign: "center" }}>Or apply with email below</p>
+          </div>
+
+          <div className="form-box">
+            <form id="applyForm" ref={formRef} action="https://formspree.io/f/mgorgjpg" method="POST" onSubmit={handleSubmit} noValidate>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div className="form-group">
                   <label htmlFor="fname">First Name</label>
-                  <input type="text" id="fname" name="first_name" placeholder="Arjun" autoComplete="given-name" />
+                  <input type="text" id="fname" name="first_name" required />
                   <small className="error-msg">Please enter your first name.</small>
                 </div>
                 <div className="form-group">
                   <label htmlFor="lname">Last Name</label>
-                  <input type="text" id="lname" name="last_name" placeholder="Mehta" autoComplete="family-name" />
+                  <input type="text" id="lname" name="last_name" required />
                   <small className="error-msg">Please enter your last name.</small>
                 </div>
               </div>
-              
               <div className="form-group">
-                <label htmlFor="contactDetail">Email (or WhatsApp)</label>
-                <input type="text" id="contactDetail" name="email_or_whatsapp" placeholder="email@domain.com or +91 98765 43210" autoComplete="email" />
-                <small className="error-msg">Please enter a valid email or phone number.</small>
+                <label htmlFor="email">Work Email</label>
+                <input type="email" id="email" name="email" required />
+                <small className="error-msg">Please enter a valid email address.</small>
+              </div>
+              <div className="form-group">
+                <label htmlFor="idea">What are you building? (One sentence)</label>
+                <textarea id="idea" name="idea_description" rows={2} required></textarea>
+                <small className="error-msg">Please describe your idea.</small>
               </div>
               
-              <div className="form-group">
-                <label htmlFor="stage">Where are you right now?</label>
-                <select id="stage" name="stage" defaultValue="">
-                  <option value="" disabled>Select your current stage</option>
-                  <option value="just-an-idea">Just an idea, haven't started</option>
-                  <option value="researching">Researching and validating</option>
-                  <option value="building-mvp">Building an MVP</option>
-                  <option value="launched">Launched, looking for traction</option>
-                  <option value="pitch-prep">Preparing to pitch or explain the idea</option>
-                </select>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="idea">Describe your idea</label>
-                <textarea id="idea" name="idea_description" placeholder="What problem are you solving? Who is it for? What is your possible solution?"></textarea>
-                <small className="error-msg">Please describe your idea in at least 15 characters.</small>
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="help">What is your biggest challenge right now?</label>
-                <input type="text" id="help" name="challenge" placeholder="e.g. I don't know if people will use this" />
-                <small className="error-msg">Please tell us your main challenge.</small>
-              </div>
-              
-              <button type="submit" id="submitBtn" className="btn btn-primary" style={{ width: "100%", justifyContent: "center", padding: "16px", backgroundColor: showSuccess ? "var(--green)" : "" }} disabled={isSubmitting}>
+              <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: "16px", marginTop: "8px", backgroundColor: showSuccess ? "#00c26b" : "" }} disabled={isSubmitting}>
                 {isSubmitting ? (
-                  <><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: "6px" }}></i> Submitting Plan...</>
+                  <><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: "6px" }}></i> Applying...</>
                 ) : showSuccess ? (
-                  <><i className="fa-solid fa-check" style={{ marginRight: "6px" }}></i> Dispatched!</>
+                  <><i className="fa-solid fa-check" style={{ marginRight: "6px" }}></i> Application Submitted!</>
                 ) : (
-                  <>Send My Idea <i className="fa-solid fa-arrow-right" style={{ marginLeft: "6px" }}></i></>
+                  "Apply for Access"
                 )}
               </button>
-              
-              <p style={{ fontSize: "0.78rem", color: "var(--ink-40)", textAlign: "center", marginTop: "12px" }}>
-                <i className="fa-solid fa-lock" style={{ fontSize: "0.7rem", marginRight: "4px" }}></i> 
-                Your idea will not be shared publicly without permission.
-              </p>
-              
+
               {showSuccess && (
-                <div className="success-banner" id="successBanner" style={{ display: "block" }}>
+                <div className="success-banner" style={{ display: "block" }}>
                   <i className="fa-solid fa-circle-check" style={{ marginRight: "6px" }}></i> 
-                  Thank you! Your idea has been submitted. We will review it and respond soon.
+                  Thank you! Your application has been received.
                 </div>
               )}
             </form>
@@ -441,49 +247,7 @@ export default function Home() {
 
       <footer>
         <div className="container">
-          <div className="footer-top">
-            <div className="footer-brand">
-              <div className="logo" style={{ marginBottom: "12px" }}>
-                <img src="/logo.jpg" alt="Launchpad Logo" style={{ height: "40px", borderRadius: "8px" }} />
-              </div>
-              <p>Helping students and first-time founders move from raw idea to clearer startup direction.</p>
-            </div>
-            <div className="footer-links">
-              <h4>Navigate</h4>
-              <ul>
-                <li><a href="#problems">Problems</a></li>
-                <li><a href="#services">Services</a></li>
-                <li><a href="#how">Process</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#contact">Contact</a></li>
-              </ul>
-            </div>
-            <div className="footer-links">
-              <h4>Focus</h4>
-              <ul>
-                <li><a href="#services">Idea Validation</a></li>
-                <li><a href="#services">Startup Roadmap</a></li>
-                <li><a href="#services">Pitch Preparation</a></li>
-                <li><a href="#contact">Early Feedback</a></li>
-              </ul>
-            </div>
-            <div className="footer-links">
-              <h4>Status</h4>
-              <ul>
-                <li><a href="#about">Early Stage</a></li>
-                <li><a href="#contact">Open for Feedback</a></li>
-                <li><a href="#contact">Global Early Users</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <p>© 2026 Launch Pad. All rights reserved.</p>
-            <div className="socials">
-              <a href="#" aria-label="LinkedIn"><i className="fa-brands fa-linkedin-in"></i></a>
-              <a href="#" aria-label="Instagram"><i className="fa-brands fa-instagram"></i></a>
-              <a href="#" aria-label="Twitter / X"><i className="fa-brands fa-x-twitter"></i></a>
-            </div>
-          </div>
+          <p>&copy; 2026 Launch Pad. The operating system for founders.</p>
         </div>
       </footer>
     </>
