@@ -108,7 +108,6 @@ export default function Home() {
           
           <div className="hero-actions">
             <a href="#apply" className="btn btn-primary"><i className="fa-solid fa-bolt" style={{ marginRight: '6px' }}></i> Start Building</a>
-            <a href="http://localhost:5000/auth/github" className="btn btn-github"><i className="fa-brands fa-github" style={{ marginRight: '6px' }}></i> Continue with GitHub</a>
           </div>
         </div>
       </section>
@@ -194,7 +193,6 @@ export default function Home() {
             
             <div style={{ display: "flex", gap: "16px", marginBottom: "24px", flexWrap: "wrap" }}>
               <a href="http://localhost:5000/auth/google" className="btn btn-google" style={{ flex: 1, minWidth: "140px" }}><i className="fa-brands fa-google" style={{ marginRight: '6px' }}></i> Google</a>
-              <a href="http://localhost:5000/auth/github" className="btn btn-github" style={{ flex: 1, minWidth: "140px" }}><i className="fa-brands fa-github" style={{ marginRight: '6px' }}></i> GitHub</a>
             </div>
             <p style={{ fontSize: "0.8rem", color: "var(--ink-40)", textAlign: "center" }}>Or apply with email below</p>
           </div>
