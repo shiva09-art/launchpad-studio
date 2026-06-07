@@ -3,20 +3,34 @@
 import React, { useState } from "react";
 import { signInWithOtp, verifyOtp } from "../../lib/supabase";
 
+const AGE_GROUPS = ["18-24", "25-34", "35-44", "45+"];
+
 export default function LoginPage() {
+  const [step, setStep] = useState<"signup" | "verify" | "done">("signup");
+  const [fullName, setFullName] = useState("");
+  const [ageGroup, setAgeGroup] = useState("");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<"email" | "otp">("email");
+  
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!fullName || !ageGroup || !email) {
+      setError("Please fill out all fields.");
+      return;
+    }
+    
     setError("");
     setLoading(true);
     try {
-      await signInWithOtp(email);
-      setStep("otp");
+      // Pass the user data into our updated signInWithOtp function
+      await signInWithOtp(email, {
+        full_name: fullName,
+        age_group: ageGroup
+      });
+      setStep("verify");
     } catch (err: any) {
       setError(err.message || "Failed to send OTP. Please try again.");
     } finally {
@@ -26,14 +40,20 @@ export default function LoginPage() {
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!otp) {
+      setError("Please enter the verification code.");
+      return;
+    }
+
     setError("");
     setLoading(true);
     try {
       await verifyOtp(email, otp);
-      // Redirect to a dashboard or homepage upon successful sign in
+      setStep("done");
+      // Redirect to the messaging dashboard (using "/" as per current routing)
       window.location.href = "/";
     } catch (err: any) {
-      setError(err.message || "Invalid or expired OTP. Please try again.");
+      setError(err.message || "Invalid or expired code. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -54,73 +74,125 @@ export default function LoginPage() {
         </div>
       </header>
 
-      <div className="section container" style={{ maxWidth: "500px", minHeight: "80vh", display: "flex", flexDirection: "column", justifyContent: "center", paddingTop: "120px" }}>
-          <div className="form-box" style={{ textAlign: "center" }}>
-            <h2 style={{ fontSize: "2rem", marginBottom: "8px" }}>Welcome Back</h2>
-            <p className="subtext" style={{ marginBottom: "32px", fontSize: "0.95rem", margin: "0 auto 32px" }}>
-              {step === "email" 
-                ? "Enter your email to receive a secure one-time password." 
-                : "Enter the 8-digit secure code sent to your email."}
-            </p>
-            
-            {error && (
-              <div style={{ padding: "12px", background: "#fee2e2", color: "#b91c1c", borderRadius: "8px", fontSize: "0.85rem", marginBottom: "20px", border: "1px solid #f87171" }}>
-                <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: "6px" }}></i>
-                {error}
-              </div>
-            )}
-
-            {step === "email" ? (
-              <form onSubmit={handleSendOtp} style={{ textAlign: "left" }}>
-                  <div className="form-group">
-                    <label style={{ color: "var(--ink-60)" }}>Email Address</label>
-                    <input 
-                      type="email" 
-                      value={email} 
-                      onChange={e => setEmail(e.target.value)} 
-                      required 
-                      placeholder="founder@startup.com" 
-                    />
-                  </div>
-                  <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: "16px" }} disabled={loading}>
-                    {loading ? (
-                      <><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: "8px" }}></i> Sending Code...</>
-                    ) : (
-                      "Send Security Code"
-                    )}
-                  </button>
-              </form>
-            ) : (
-              <form onSubmit={handleVerifyOtp} style={{ textAlign: "left" }}>
-                  <div className="form-group">
-                    <label style={{ color: "var(--ink-60)" }}>Secure Code (OTP)</label>
-                    <input 
-                      type="text" 
-                      value={otp} 
-                      onChange={e => setOtp(e.target.value)} 
-                      required 
-                      placeholder="12345678"
-                      style={{ letterSpacing: "4px", fontSize: "1.2rem", textAlign: "center" }}
-                    />
-                  </div>
-                  <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: "16px" }} disabled={loading}>
-                    {loading ? (
-                      <><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: "8px" }}></i> Verifying...</>
-                    ) : (
-                      "Verify & Sign In"
-                    )}
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={() => setStep("email")} 
-                    className="btn btn-outline" 
-                    style={{ width: "100%", padding: "12px", marginTop: "12px", border: "none", color: "var(--ink-40)" }}
-                  >
-                    Use a different email
-                  </button>
-              </form>
-            )}
+      <div className="section container onboarding-wrapper">
+        <div className="onboarding-form">
+          {/* Progress Indicator */}
+          <div className="stepper">
+            <div className={`step-item ${step === "signup" || step === "verify" || step === "done" ? "completed" : ""}`}>
+              <div className="step-circle">1</div>
+              <span>Sign Up</span>
+            </div>
+            <div className={`step-item ${step === "verify" ? "active" : step === "done" ? "completed" : ""}`}>
+              <div className="step-circle">2</div>
+              <span>Verify Gmail</span>
+            </div>
+            <div className={`step-item ${step === "done" ? "completed" : ""}`}>
+              <div className="step-circle">3</div>
+              <span>Start Messaging</span>
+            </div>
           </div>
+
+          <div style={{ textAlign: "center", marginBottom: "32px" }}>
+            <h2 style={{ fontSize: "2rem", marginBottom: "8px" }}>
+              {step === "signup" ? "Create your account" : "Verify your email"}
+            </h2>
+            <p className="required-msg">
+              Please sign up and verify your Gmail account to start sending messages.
+            </p>
+          </div>
+
+          {error && (
+            <div style={{ padding: "12px", background: "#fee2e2", color: "#b91c1c", borderRadius: "8px", fontSize: "0.85rem", marginBottom: "24px", border: "1px solid #f87171" }}>
+              <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: "6px" }}></i>
+              {error}
+            </div>
+          )}
+
+          {step === "signup" ? (
+            <form onSubmit={handleSendOtp}>
+              <div className="form-group">
+                <label style={{ color: "var(--ink-60)" }}>Full Name</label>
+                <input 
+                  type="text" 
+                  className="modern-input"
+                  value={fullName} 
+                  onChange={e => setFullName(e.target.value)} 
+                  required 
+                  placeholder="John Doe" 
+                />
+              </div>
+
+              <div className="form-group">
+                <label style={{ color: "var(--ink-60)" }}>Age Group</label>
+                <div className="chip-group">
+                  {AGE_GROUPS.map((group) => (
+                    <div 
+                      key={group}
+                      className={`chip ${ageGroup === group ? "selected" : ""}`}
+                      onClick={() => setAgeGroup(group)}
+                    >
+                      {group}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label style={{ color: "var(--ink-60)" }}>Gmail Address</label>
+                <input 
+                  type="email" 
+                  className="modern-input"
+                  value={email} 
+                  onChange={e => setEmail(e.target.value)} 
+                  required 
+                  placeholder="founder@gmail.com" 
+                />
+              </div>
+
+              <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: "16px", marginTop: "12px", fontSize: "1rem" }} disabled={loading}>
+                {loading ? (
+                  <><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: "8px" }}></i> Sending Code...</>
+                ) : (
+                  "Continue"
+                )}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifyOtp} style={{ animation: "fadeInUp 0.4s var(--ease) forwards" }}>
+              <div className="form-group">
+                <label style={{ color: "var(--ink-60)", textAlign: "center", display: "block" }}>
+                  Enter the 6-digit code sent to <br /><strong>{email}</strong>
+                </label>
+                <input 
+                  type="text" 
+                  className="modern-input"
+                  value={otp} 
+                  onChange={e => setOtp(e.target.value)} 
+                  required 
+                  placeholder="123456"
+                  style={{ letterSpacing: "8px", fontSize: "1.5rem", textAlign: "center", marginTop: "12px" }}
+                />
+              </div>
+
+              <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: "16px", marginTop: "12px", fontSize: "1rem" }} disabled={loading}>
+                {loading ? (
+                  <><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: "8px" }}></i> Verifying...</>
+                ) : (
+                  "Verify & Start Messaging"
+                )}
+              </button>
+              
+              <button 
+                type="button" 
+                onClick={() => setStep("signup")} 
+                className="btn btn-outline" 
+                style={{ width: "100%", padding: "12px", marginTop: "12px", border: "none", color: "var(--ink-40)" }}
+              >
+                Back to Sign Up
+              </button>
+            </form>
+          )}
+        </div>
       </div>
     </>
   );

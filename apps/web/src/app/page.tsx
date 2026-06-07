@@ -1,11 +1,14 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import { getSession } from "../lib/supabase";
 
 export default function Home() {
   const [navScrolled, setNavScrolled] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [session, setSession] = useState<any>(null);
+  const [isLoadingSession, setIsLoadingSession] = useState(true);
   
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -15,6 +18,11 @@ export default function Home() {
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
+
+    getSession().then((s) => {
+      setSession(s);
+      setIsLoadingSession(false);
+    });
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
@@ -190,16 +198,25 @@ export default function Home() {
             <div className="label">Early Access</div>
             <h2>Join the next cohort of builders.</h2>
             <p className="subtext" style={{ marginBottom: "32px" }}>We are onboarding a limited number of technical and non-technical founders this month. Create your account to access the ecosystem.</p>
-            
-            <div style={{ display: "flex", gap: "16px", marginBottom: "24px", flexWrap: "wrap" }}>
-              <a href="http://localhost:5000/auth/google" className="btn btn-google" style={{ flex: 1, minWidth: "140px" }}><i className="fa-brands fa-google" style={{ marginRight: '6px' }}></i> Google</a>
-            </div>
-            <p style={{ fontSize: "0.8rem", color: "var(--ink-40)", textAlign: "center" }}>Or apply with email below</p>
           </div>
 
           <div className="form-box" style={{ padding: "32px" }}>
-            <form id="applyForm" ref={formRef} action="https://formspree.io/f/mgorgjpg" method="POST" onSubmit={handleSubmit} noValidate>
-              
+            {isLoadingSession ? (
+              <div style={{ textAlign: "center", padding: "40px", color: "var(--ink-60)" }}>
+                <i className="fa-solid fa-spinner fa-spin" style={{ marginRight: "8px" }}></i> Loading...
+              </div>
+            ) : !session ? (
+              <div style={{ textAlign: "center", padding: "40px" }}>
+                <h3 style={{ marginBottom: "16px", fontSize: "1.5rem" }}>Sign In Required</h3>
+                <p style={{ color: "var(--ink-60)", marginBottom: "24px", lineHeight: "1.6" }}>
+                  You must sign in before you can apply to the launch pad and access the ecosystem.
+                </p>
+                <a href="/login" className="btn btn-primary" style={{ width: "100%", padding: "16px", justifyContent: "center" }}>
+                  Sign In to Continue
+                </a>
+              </div>
+            ) : (
+              <form id="applyForm" ref={formRef} action="https://formspree.io/f/mgorgjpg" method="POST" onSubmit={handleSubmit} noValidate>
               <div className="form-group" style={{ marginBottom: "20px" }}>
                 <label htmlFor="fullName" style={{ fontWeight: 500, color: "var(--ink-80)", marginBottom: "8px", display: "block" }}>Full Name</label>
                 <input type="text" id="fullName" name="full_name" required placeholder="Jane Doe" style={{ padding: "12px", borderRadius: "8px", width: "100%", border: "1px solid var(--ink-20)" }} />
@@ -257,6 +274,7 @@ export default function Home() {
                 </p>
               </div>
             </form>
+            )}
           </div>
         </div>
       </section>

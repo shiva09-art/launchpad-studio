@@ -47,11 +47,12 @@ export async function signIn(email: string, password: string) {
   return data;
 }
 
-export async function signInWithOtp(email: string) {
+export async function signInWithOtp(email: string, userData?: any) {
   const { data, error } = await supabase.auth.signInWithOtp({
     email,
     options: {
       shouldCreateUser: true,
+      data: userData,
     },
   });
   if (error) throw error;
