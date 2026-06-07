@@ -60,7 +60,7 @@ export default function LoginPage() {
             <p className="subtext" style={{ marginBottom: "32px", fontSize: "0.95rem", margin: "0 auto 32px" }}>
               {step === "email" 
                 ? "Enter your email to receive a secure one-time password." 
-                : "Enter the 6-digit secure code sent to your email."}
+                : "Enter the 8-digit secure code sent to your email."}
             </p>
             
             {error && (
@@ -99,7 +99,7 @@ export default function LoginPage() {
                       value={otp} 
                       onChange={e => setOtp(e.target.value)} 
                       required 
-                      placeholder="123456"
+                      placeholder="12345678"
                       style={{ letterSpacing: "4px", fontSize: "1.2rem", textAlign: "center" }}
                     />
                   </div>
