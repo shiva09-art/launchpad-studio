@@ -1,7 +1,15 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { getSession } from "../lib/supabase";
+
+// Define form state interface for better TypeScript support
+interface FormData {
+  full_name: string;
+  age_group: string;
+  email: string;
+  idea_description: string;
+}
 
 export default function Home() {
   const [navScrolled, setNavScrolled] = useState(false);
@@ -10,79 +18,90 @@ export default function Home() {
   const [session, setSession] = useState<any>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   
-  const formRef = useRef<HTMLFormElement>(null);
+  // Controlled form state
+  const [formData, setFormData] = useState<FormData>({
+    full_name: "",
+    age_group: "",
+    email: "",
+    idea_description: ""
+  });
+  const [formErrors, setFormErrors] = useState<Partial<FormData>>({});
 
   useEffect(() => {
     const handleScroll = () => {
       setNavScrolled(window.scrollY > 10);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
+    handleScroll(); // Check initial scroll position
 
-    getSession().then((s) => {
-      setSession(s);
-      setIsLoadingSession(false);
-    });
+    // Fetch user session
+    getSession()
+      .then((s) => {
+        setSession(s);
+      })
+      .catch((err) => {
+        console.error("Failed to load session:", err);
+      })
+      .finally(() => {
+        setIsLoadingSession(false);
+      });
 
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    // Clear the specific error when the user starts typing
+    if (formErrors[name as keyof FormData]) {
+      setFormErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const validateForm = (): boolean => {
+    const errors: Partial<FormData> = {};
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!formData.full_name.trim()) errors.full_name = "Please enter your full name.";
+    if (!formData.age_group) errors.age_group = "Please select your age group.";
+    if (!emailPattern.test(formData.email.trim())) errors.email = "Please enter a valid email address.";
+    if (formData.idea_description.trim().length < 5) errors.idea_description = "Please describe your idea and stage in more detail.";
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isSubmitting) return;
-
-    const form = formRef.current;
-    if (!form) return;
-
-    const fullName = form.elements.namedItem("full_name") as HTMLInputElement;
-    const ageGroup = form.elements.namedItem("age_group") as HTMLSelectElement;
-    const email = form.elements.namedItem("email") as HTMLInputElement;
-    const idea = form.elements.namedItem("idea_description") as HTMLTextAreaElement;
-
-    form.querySelectorAll(".error-msg").forEach(el => {
-      (el as HTMLElement).style.display = "none";
-    });
-
-    let valid = true;
-    const showErr = (input: HTMLElement) => {
-      const errorMsg = input.parentElement?.querySelector(".error-msg") as HTMLElement;
-      if (errorMsg) errorMsg.style.display = "block";
-      valid = false;
-    };
-
-    if (!fullName.value.trim()) showErr(fullName);
-    if (!ageGroup.value) showErr(ageGroup);
     
-    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailPattern.test(email.value.trim())) showErr(email);
-    
-    if (idea.value.trim().length < 5) showErr(idea);
-
-    if (!valid) return;
+    if (isSubmitting || !validateForm()) return;
 
     setIsSubmitting(true);
 
     try {
-      const data = new FormData(form);
+      // Construct FormData object for Formspree
+      const data = new FormData();
+      Object.entries(formData).forEach(([key, value]) => {
+        data.append(key, value);
+      });
+
       const res = await fetch("https://formspree.io/f/mgorgjpg", {
         method: "POST",
         body: data,
         headers: { Accept: "application/json" }
       });
 
-      if (res.ok) {
-        form.reset();
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-        }, 5000);
-      } else {
-        throw new Error("Formspree error");
-      }
+      if (!res.ok) throw new Error("Transmission failure.");
+
+      // Success handling
+      setFormData({ full_name: "", age_group: "", email: "", idea_description: "" });
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 5000);
+      
     } catch (error) {
-      alert("Transmission failure. Please re-submit your details.");
+      alert("Transmission failure. Please check your connection and try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -115,7 +134,9 @@ export default function Home() {
           <p>Launch Pad is the complete ecosystem to validate ideas, connect with expert mentors, build your MVP, and prepare for fundraising—all through a single platform.</p>
           
           <div className="hero-actions">
-            <a href="#apply" className="btn btn-primary"><i className="fa-solid fa-bolt" style={{ marginRight: '6px' }}></i> Start Building</a>
+            <a href="#apply" className="btn btn-primary">
+              <i className="fa-solid fa-bolt" style={{ marginRight: '6px' }}></i> Start Building
+            </a>
           </div>
         </div>
       </section>
@@ -216,64 +237,110 @@ export default function Home() {
                 </a>
               </div>
             ) : (
-              <form id="applyForm" ref={formRef} action="https://formspree.io/f/mgorgjpg" method="POST" onSubmit={handleSubmit} noValidate>
-              <div className="form-group" style={{ marginBottom: "20px" }}>
-                <label htmlFor="fullName" style={{ fontWeight: 500, color: "var(--ink-80)", marginBottom: "8px", display: "block" }}>Full Name</label>
-                <input type="text" id="fullName" name="full_name" required placeholder="Jane Doe" style={{ padding: "12px", borderRadius: "8px", width: "100%", border: "1px solid var(--ink-20)" }} />
-                <small className="error-msg">Please enter your full name.</small>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: "20px" }}>
-                <label htmlFor="ageGroup" style={{ fontWeight: 500, color: "var(--ink-80)", marginBottom: "8px", display: "block" }}>Age Group</label>
-                <select id="ageGroup" name="age_group" required style={{ padding: "12px", borderRadius: "8px", border: "1px solid var(--ink-20)", width: "100%", background: "var(--bg-card)", color: "var(--ink-80)", fontFamily: "inherit", appearance: "none" }}>
-                  <option value="" disabled selected>Select your age group</option>
-                  <option value="Under 18">Under 18</option>
-                  <option value="18-24">18–24</option>
-                  <option value="25-34">25–34</option>
-                  <option value="35+">35+</option>
-                </select>
-                <small className="error-msg">Please select your age group.</small>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: "20px" }}>
-                <label htmlFor="email" style={{ fontWeight: 500, color: "var(--ink-80)", marginBottom: "8px", display: "block" }}>Email Address</label>
-                <input type="email" id="email" name="email" required placeholder="founder@startup.com" style={{ padding: "12px", borderRadius: "8px", width: "100%", border: "1px solid var(--ink-20)" }} />
-                <small className="error-msg">Please enter a valid email address.</small>
-              </div>
-
-              <div className="form-group" style={{ marginBottom: "24px" }}>
-                <label htmlFor="idea" style={{ fontWeight: 500, color: "var(--ink-80)", marginBottom: "8px", display: "block" }}>What are you building? And what stage are you at?</label>
-                <textarea id="idea" name="idea_description" rows={3} required placeholder="Briefly describe your startup idea and current progress..." style={{ padding: "12px", borderRadius: "8px", width: "100%", border: "1px solid var(--ink-20)", resize: "vertical", fontFamily: "inherit" }}></textarea>
-                <small className="error-msg">Please describe your idea and stage.</small>
-              </div>
-              
-              <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: "16px", marginTop: "8px", backgroundColor: showSuccess ? "#00c26b" : "var(--accent)", color: "#ffffff", fontWeight: 600, letterSpacing: "0.5px", border: "none" }} disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: "8px" }}></i> Applying...</>
-                ) : showSuccess ? (
-                  <><i className="fa-solid fa-check" style={{ marginRight: "8px" }}></i> Application Submitted!</>
-                ) : (
-                  "Create Account & Apply"
-                )}
-              </button>
-
-              {showSuccess && (
-                <div className="success-banner" style={{ display: "block", marginTop: "16px", padding: "12px", borderRadius: "8px", background: "rgba(0, 194, 107, 0.1)", color: "#00c26b", textAlign: "center" }}>
-                  <i className="fa-solid fa-circle-check" style={{ marginRight: "6px" }}></i> 
-                  Thank you! Your application has been received.
+              <form onSubmit={handleSubmit} noValidate>
+                <div className="form-group" style={{ marginBottom: "20px" }}>
+                  <label htmlFor="fullName" style={{ fontWeight: 500, color: "var(--ink-80)", marginBottom: "8px", display: "block" }}>Full Name</label>
+                  <input 
+                    type="text" 
+                    id="fullName" 
+                    name="full_name" 
+                    value={formData.full_name}
+                    onChange={handleInputChange}
+                    placeholder="Jane Doe" 
+                    style={{ padding: "12px", borderRadius: "8px", width: "100%", border: `1px solid ${formErrors.full_name ? 'var(--error, #e3342f)' : 'var(--ink-20)'}` }} 
+                  />
+                  {formErrors.full_name && <small style={{ color: "var(--error, #e3342f)", display: "block", marginTop: "4px" }}>{formErrors.full_name}</small>}
                 </div>
-              )}
 
-              <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid var(--ink-20)", fontSize: "0.9rem", color: "var(--ink-60)", textAlign: "center", lineHeight: "1.5" }}>
-                <p style={{ marginBottom: "8px", fontWeight: 500, color: "var(--ink-80)" }}>
-                  Create an account to access the Launch Pad ecosystem and connect with founders.
-                </p>
-                <p style={{ margin: 0, opacity: 0.8, fontSize: "0.85rem" }}>
-                  <i className="fa-solid fa-shield-halved" style={{ marginRight: "6px" }}></i>
-                  Users must sign up before sending messages.
-                </p>
-              </div>
-            </form>
+                <div className="form-group" style={{ marginBottom: "20px" }}>
+                  <label htmlFor="ageGroup" style={{ fontWeight: 500, color: "var(--ink-80)", marginBottom: "8px", display: "block" }}>Age Group</label>
+                  <select 
+                    id="ageGroup" 
+                    name="age_group" 
+                    value={formData.age_group}
+                    onChange={handleInputChange}
+                    style={{ padding: "12px", borderRadius: "8px", border: `1px solid ${formErrors.age_group ? 'var(--error, #e3342f)' : 'var(--ink-20)'}`, width: "100%", background: "var(--bg-card)", color: "var(--ink-80)", fontFamily: "inherit", appearance: "none" }}
+                  >
+                    <option value="" disabled>Select your age group</option>
+                    <option value="Under 18">Under 18</option>
+                    <option value="18-24">18–24</option>
+                    <option value="25-34">25–34</option>
+                    <option value="35+">35+</option>
+                  </select>
+                  {formErrors.age_group && <small style={{ color: "var(--error, #e3342f)", display: "block", marginTop: "4px" }}>{formErrors.age_group}</small>}
+                </div>
+
+                <div className="form-group" style={{ marginBottom: "20px" }}>
+                  <label htmlFor="email" style={{ fontWeight: 500, color: "var(--ink-80)", marginBottom: "8px", display: "block" }}>Email Address</label>
+                  <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="founder@startup.com" 
+                    style={{ padding: "12px", borderRadius: "8px", width: "100%", border: `1px solid ${formErrors.email ? 'var(--error, #e3342f)' : 'var(--ink-20)'}` }} 
+                  />
+                  {formErrors.email && <small style={{ color: "var(--error, #e3342f)", display: "block", marginTop: "4px" }}>{formErrors.email}</small>}
+                </div>
+
+                <div className="form-group" style={{ marginBottom: "24px" }}>
+                  <label htmlFor="idea" style={{ fontWeight: 500, color: "var(--ink-80)", marginBottom: "8px", display: "block" }}>What are you building? And what stage are you at?</label>
+                  <textarea 
+                    id="idea" 
+                    name="idea_description" 
+                    value={formData.idea_description}
+                    onChange={handleInputChange}
+                    rows={4} 
+                    placeholder="Briefly describe your startup idea and current progress..." 
+                    style={{ padding: "12px", borderRadius: "8px", width: "100%", border: `1px solid ${formErrors.idea_description ? 'var(--error, #e3342f)' : 'var(--ink-20)'}`, resize: "vertical", fontFamily: "inherit" }}
+                  />
+                  {formErrors.idea_description && <small style={{ color: "var(--error, #e3342f)", display: "block", marginTop: "4px" }}>{formErrors.idea_description}</small>}
+                </div>
+                
+                <button 
+                  type="submit" 
+                  className="btn btn-primary" 
+                  disabled={isSubmitting}
+                  style={{ 
+                    width: "100%", 
+                    padding: "16px", 
+                    marginTop: "8px", 
+                    backgroundColor: showSuccess ? "#00c26b" : "var(--accent)", 
+                    color: "#ffffff", 
+                    fontWeight: 600, 
+                    letterSpacing: "0.5px", 
+                    border: "none",
+                    transition: "background-color 0.3s ease",
+                    cursor: isSubmitting ? "not-allowed" : "pointer"
+                  }} 
+                >
+                  {isSubmitting ? (
+                    <><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: "8px" }}></i> Applying...</>
+                  ) : showSuccess ? (
+                    <><i className="fa-solid fa-check" style={{ marginRight: "8px" }}></i> Application Submitted!</>
+                  ) : (
+                    "Create Account & Apply"
+                  )}
+                </button>
+
+                {showSuccess && (
+                  <div className="success-banner" style={{ display: "block", marginTop: "16px", padding: "12px", borderRadius: "8px", background: "rgba(0, 194, 107, 0.1)", color: "#00c26b", textAlign: "center", animation: "fadeIn 0.3s ease" }}>
+                    <i className="fa-solid fa-circle-check" style={{ marginRight: "6px" }}></i> 
+                    Thank you! Your application has been received.
+                  </div>
+                )}
+
+                <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid var(--ink-20)", fontSize: "0.9rem", color: "var(--ink-60)", textAlign: "center", lineHeight: "1.5" }}>
+                  <p style={{ marginBottom: "8px", fontWeight: 500, color: "var(--ink-80)" }}>
+                    Create an account to access the Launch Pad ecosystem and connect with founders.
+                  </p>
+                  <p style={{ margin: 0, opacity: 0.8, fontSize: "0.85rem" }}>
+                    <i className="fa-solid fa-shield-halved" style={{ marginRight: "6px" }}></i>
+                    Users must sign up before accessing features.
+                  </p>
+                </div>
+              </form>
             )}
           </div>
         </div>
@@ -281,7 +348,7 @@ export default function Home() {
 
       <footer>
         <div className="container">
-          <p>&copy; 2026 Launch Pad. The operating system for founders.</p>
+          <p>&copy; {new Date().getFullYear()} Launch Pad. The operating system for founders.</p>
         </div>
       </footer>
     </>
