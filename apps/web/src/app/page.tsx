@@ -197,47 +197,65 @@ export default function Home() {
             <p style={{ fontSize: "0.8rem", color: "var(--ink-40)", textAlign: "center" }}>Or apply with email below</p>
           </div>
 
-          <div className="form-box">
+          <div className="form-box" style={{ padding: "32px" }}>
             <form id="applyForm" ref={formRef} action="https://formspree.io/f/mgorgjpg" method="POST" onSubmit={handleSubmit} noValidate>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                <div className="form-group">
-                  <label htmlFor="fname">First Name</label>
-                  <input type="text" id="fname" name="first_name" required />
-                  <small className="error-msg">Please enter your first name.</small>
-                </div>
-                <div className="form-group">
-                  <label htmlFor="lname">Last Name</label>
-                  <input type="text" id="lname" name="last_name" required />
-                  <small className="error-msg">Please enter your last name.</small>
-                </div>
+              
+              <div className="form-group" style={{ marginBottom: "20px" }}>
+                <label htmlFor="fullName" style={{ fontWeight: 500, color: "var(--ink-80)", marginBottom: "8px", display: "block" }}>Full Name</label>
+                <input type="text" id="fullName" name="full_name" required placeholder="Jane Doe" style={{ padding: "12px", borderRadius: "8px", width: "100%", border: "1px solid var(--ink-20)" }} />
+                <small className="error-msg">Please enter your full name.</small>
               </div>
-              <div className="form-group">
-                <label htmlFor="email">Work Email</label>
-                <input type="email" id="email" name="email" required />
+
+              <div className="form-group" style={{ marginBottom: "20px" }}>
+                <label htmlFor="ageGroup" style={{ fontWeight: 500, color: "var(--ink-80)", marginBottom: "8px", display: "block" }}>Age Group</label>
+                <select id="ageGroup" name="age_group" required style={{ padding: "12px", borderRadius: "8px", border: "1px solid var(--ink-20)", width: "100%", background: "var(--bg-card)", color: "var(--ink-80)", fontFamily: "inherit", appearance: "none" }}>
+                  <option value="" disabled selected>Select your age group</option>
+                  <option value="Under 18">Under 18</option>
+                  <option value="18-24">18–24</option>
+                  <option value="25-34">25–34</option>
+                  <option value="35+">35+</option>
+                </select>
+                <small className="error-msg">Please select your age group.</small>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: "20px" }}>
+                <label htmlFor="email" style={{ fontWeight: 500, color: "var(--ink-80)", marginBottom: "8px", display: "block" }}>Email Address</label>
+                <input type="email" id="email" name="email" required placeholder="founder@startup.com" style={{ padding: "12px", borderRadius: "8px", width: "100%", border: "1px solid var(--ink-20)" }} />
                 <small className="error-msg">Please enter a valid email address.</small>
               </div>
-              <div className="form-group">
-                <label htmlFor="idea">What are you building? (One sentence)</label>
-                <textarea id="idea" name="idea_description" rows={2} required></textarea>
-                <small className="error-msg">Please describe your idea.</small>
+
+              <div className="form-group" style={{ marginBottom: "24px" }}>
+                <label htmlFor="idea" style={{ fontWeight: 500, color: "var(--ink-80)", marginBottom: "8px", display: "block" }}>What are you building? And what stage are you at?</label>
+                <textarea id="idea" name="idea_description" rows={3} required placeholder="Briefly describe your startup idea and current progress..." style={{ padding: "12px", borderRadius: "8px", width: "100%", border: "1px solid var(--ink-20)", resize: "vertical", fontFamily: "inherit" }}></textarea>
+                <small className="error-msg">Please describe your idea and stage.</small>
               </div>
               
-              <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: "16px", marginTop: "8px", backgroundColor: showSuccess ? "#00c26b" : "" }} disabled={isSubmitting}>
+              <button type="submit" className="btn btn-primary" style={{ width: "100%", padding: "16px", marginTop: "8px", backgroundColor: showSuccess ? "#00c26b" : "var(--primary)", fontWeight: 600, letterSpacing: "0.5px" }} disabled={isSubmitting}>
                 {isSubmitting ? (
-                  <><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: "6px" }}></i> Applying...</>
+                  <><i className="fa-solid fa-spinner fa-spin" style={{ marginRight: "8px" }}></i> Applying...</>
                 ) : showSuccess ? (
-                  <><i className="fa-solid fa-check" style={{ marginRight: "6px" }}></i> Application Submitted!</>
+                  <><i className="fa-solid fa-check" style={{ marginRight: "8px" }}></i> Application Submitted!</>
                 ) : (
-                  "Apply for Access"
+                  "Create Account & Apply"
                 )}
               </button>
 
               {showSuccess && (
-                <div className="success-banner" style={{ display: "block" }}>
+                <div className="success-banner" style={{ display: "block", marginTop: "16px", padding: "12px", borderRadius: "8px", background: "rgba(0, 194, 107, 0.1)", color: "#00c26b", textAlign: "center" }}>
                   <i className="fa-solid fa-circle-check" style={{ marginRight: "6px" }}></i> 
                   Thank you! Your application has been received.
                 </div>
               )}
+
+              <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid var(--ink-20)", fontSize: "0.9rem", color: "var(--ink-60)", textAlign: "center", lineHeight: "1.5" }}>
+                <p style={{ marginBottom: "8px", fontWeight: 500, color: "var(--ink-80)" }}>
+                  Create an account to access the Launch Pad ecosystem and connect with founders.
+                </p>
+                <p style={{ margin: 0, opacity: 0.8, fontSize: "0.85rem" }}>
+                  <i className="fa-solid fa-shield-halved" style={{ marginRight: "6px" }}></i>
+                  Users must sign up before sending messages.
+                </p>
+              </div>
             </form>
           </div>
         </div>
