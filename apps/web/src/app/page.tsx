@@ -130,8 +130,8 @@ export default function Home() {
       <section className="hero">
         <div className="container">
           <div className="label">Execution-as-a-Service</div>
-          <h1>The operating system <br /><em>for first-time founders.</em></h1>
-          <p>Launch Pad is the complete ecosystem to validate ideas, connect with expert mentors, build your MVP, and prepare for fundraising—all through a single platform.</p>
+          <h1>Where ideas become startups.</h1>
+          <p>Validate your idea, solve real problems, build your MVP, and prepare for funding—all in one place.</p>
           
           <div className="hero-actions">
             <a href="#apply" className="btn btn-primary">
